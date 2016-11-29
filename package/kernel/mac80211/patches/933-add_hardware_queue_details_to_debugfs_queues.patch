@@ -1,0 +1,20 @@
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -702,8 +702,16 @@ static ssize_t print_queue(struct ath_so
+ 			 "ampdu-depth", txq->axq_ampdu_depth);
+ 	len += scnprintf(buf + len, size - len, "%s: %3d ",
+ 			 "pending", txq->pending_frames);
+-	len += scnprintf(buf + len, size - len, "%s: %d\n",
++	len += scnprintf(buf + len, size - len, "%s: %d ",
+ 			 "stopped", txq->stopped);
++	len += scnprintf(buf + len, size - len, "%s: %4d ",
++			 "cwmin", sc->sc_ah->txq[txq->axq_qnum].tqi_cwmin);
++	len += scnprintf(buf + len, size - len, "%s: %4d ",
++			 "cwmax", sc->sc_ah->txq[txq->axq_qnum].tqi_cwmax);
++	len += scnprintf(buf + len, size - len, "%s: %d ",
++			 "aifs", sc->sc_ah->txq[txq->axq_qnum].tqi_aifs);
++	len += scnprintf(buf + len, size - len, "%s: %4d\n",
++			 "burst-time", sc->sc_ah->txq[txq->axq_qnum].tqi_burstTime);
+ 
+ 	ath_txq_unlock(sc, txq);
+ 	return len;

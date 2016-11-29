@@ -1,0 +1,13 @@
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -835,6 +835,10 @@ static ssize_t read_file_misc(struct fil
+ 			 iter_data.nwds, iter_data.nadhocs,
+ 			 sc->nvifs, sc->nbcnvifs);
+ 
++	len += scnprintf(buf + len, sizeof(buf) - len,
++			 "NF_2G: MIN: %d MAX: %d NOMINAL: %d\n",
++			 sc->sc_ah->nf_2g.min, sc->sc_ah->nf_2g.max, sc->sc_ah->nf_2g.nominal);
++
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+ 

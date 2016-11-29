@@ -1,0 +1,14 @@
+--- a/drivers/net/wireless/ath/ath9k/common-init.c
++++ b/drivers/net/wireless/ath/ath9k/common-init.c
+@@ -100,10 +100,10 @@ static const struct ieee80211_channel at
+ }
+ 
+ static struct ieee80211_rate ath9k_legacy_rates[] = {
++	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
+ 	RATE(10, 0x1b, 0),
+ 	RATE(20, 0x1a, IEEE80211_RATE_SHORT_PREAMBLE),
+ 	RATE(55, 0x19, IEEE80211_RATE_SHORT_PREAMBLE),
+-	RATE(110, 0x18, IEEE80211_RATE_SHORT_PREAMBLE),
+ 	RATE(60, 0x0b, (IEEE80211_RATE_SUPPORTS_5MHZ |
+ 			IEEE80211_RATE_SUPPORTS_10MHZ)),
+ 	RATE(90, 0x0f, (IEEE80211_RATE_SUPPORTS_5MHZ |

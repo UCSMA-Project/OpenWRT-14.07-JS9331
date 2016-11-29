@@ -1,0 +1,13 @@
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3085,7 +3085,9 @@ static int nl80211_set_mac_acl(struct sk
+ 	int err;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MONITOR)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!dev->ieee80211_ptr->beacon_interval)

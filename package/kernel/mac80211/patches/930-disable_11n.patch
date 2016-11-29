@@ -1,0 +1,11 @@
+--- a/drivers/net/wireless/ath/ath9k/common-init.c
++++ b/drivers/net/wireless/ath/ath9k/common-init.c
+@@ -176,7 +176,7 @@ void ath9k_cmn_setup_ht_cap(struct ath_h
+ 	u8 tx_streams, rx_streams;
+ 	int i, max_streams;
+ 
+-	ht_info->ht_supported = true;
++	ht_info->ht_supported = false;
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 		       IEEE80211_HT_CAP_SM_PS |
+ 		       IEEE80211_HT_CAP_SGI_40 |
