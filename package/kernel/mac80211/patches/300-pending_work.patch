@@ -753,7 +753,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  		if (!budget--)
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -100,7 +100,8 @@ static void __cleanup_single_sta(struct 
+@@ -100,7 +100,8 @@ static void __cleanup_single_sta(struct
  	struct ps_data *ps;
  
  	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
@@ -763,7 +763,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
  		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
  			ps = &sdata->bss->ps;
-@@ -111,6 +112,7 @@ static void __cleanup_single_sta(struct 
+@@ -111,6 +112,7 @@ static void __cleanup_single_sta(struct
  
  		clear_sta_flag(sta, WLAN_STA_PS_STA);
  		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
@@ -771,7 +771,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  
  		atomic_dec(&ps->num_sta_ps);
  		sta_info_recalc_tim(sta);
-@@ -125,7 +127,7 @@ static void __cleanup_single_sta(struct 
+@@ -125,7 +127,7 @@ static void __cleanup_single_sta(struct
  	if (ieee80211_vif_is_mesh(&sdata->vif))
  		mesh_sta_cleanup(sta);
  
@@ -1562,7 +1562,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  			conf->bssid[1] = cpu_to_le32(reg);
  		}
  
-@@ -4517,28 +4562,6 @@ static int rt2800_init_registers(struct 
+@@ -4517,28 +4562,6 @@ static int rt2800_init_registers(struct
  	if (ret)
  		return ret;
  
@@ -2279,7 +2279,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  		if (err < 0) {
  			kfree(sdata->u.ap.next_beacon);
  			return err;
-@@ -3367,7 +3054,6 @@ __ieee80211_channel_switch(struct wiphy 
+@@ -3367,7 +3054,6 @@ __ieee80211_channel_switch(struct wiphy
  	sdata->csa_radar_required = params->radar_required;
  	sdata->csa_chandef = params->chandef;
  	sdata->csa_block_tx = params->block_tx;
@@ -2314,7 +2314,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	}
  
  	IEEE80211_SKB_CB(skb)->flags = flags;
-@@ -3598,21 +3297,6 @@ static int ieee80211_get_antenna(struct 
+@@ -3598,21 +3297,6 @@ static int ieee80211_get_antenna(struct
  	return drv_get_antenna(local, tx_ant, rx_ant);
  }
  
@@ -2367,7 +2367,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  		debugfs_create_x32("driver_buffered_tids", 0400,
 --- a/net/mac80211/wep.c
 +++ b/net/mac80211/wep.c
-@@ -271,22 +271,6 @@ static int ieee80211_wep_decrypt(struct 
+@@ -271,22 +271,6 @@ static int ieee80211_wep_decrypt(struct
  	return ret;
  }
  
@@ -2590,7 +2590,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  {
  	struct wireless_dev *wdev = dev->ieee80211_ptr;
  
-@@ -23,84 +21,4 @@ static void cfg80211_get_drvinfo(struct 
+@@ -23,84 +21,4 @@ static void cfg80211_get_drvinfo(struct
  	strlcpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
  		sizeof(info->bus_info));
  }
@@ -3188,7 +3188,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  	case B43_PHYTYPE_HT:
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
-@@ -935,7 +935,7 @@ freq_reg_info_regd(struct wiphy *wiphy, 
+@@ -935,7 +935,7 @@ freq_reg_info_regd(struct wiphy *wiphy,
  		if (!band_rule_found)
  			band_rule_found = freq_in_rule_band(fr, center_freq);
  
@@ -3212,7 +3212,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
   */
  static void handle_channel(struct wiphy *wiphy,
  			   enum nl80211_reg_initiator initiator,
-@@ -1083,12 +1083,8 @@ static void handle_channel(struct wiphy 
+@@ -1083,12 +1083,8 @@ static void handle_channel(struct wiphy
  	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
  		max_bandwidth_khz = reg_get_max_bandwidth(regd, reg_rule);
  
@@ -3553,7 +3553,7 @@ Date:   Mon May 19 21:20:49 2014 +0200
  };
 --- a/drivers/net/wireless/ath/ath9k/mac.c
 +++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -311,14 +311,7 @@ int ath9k_hw_setuptxqueue(struct ath_hw 
+@@ -311,14 +311,7 @@ int ath9k_hw_setuptxqueue(struct ath_hw
  		q = ATH9K_NUM_TX_QUEUES - 3;
  		break;
  	case ATH9K_TX_QUEUE_DATA:
