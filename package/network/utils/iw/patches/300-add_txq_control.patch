@@ -1,0 +1,85 @@
+--- a/phy.c
++++ b/phy.c
+@@ -232,6 +232,82 @@ COMMAND(set, rts, "<rts threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+ 	"Set rts threshold.");
+ 
++static int handle_wmm_params(struct nl80211_state *state,
++				 struct nl_cb *cb,
++				 struct nl_msg *msg,
++				 int argc, char **argv,
++				 enum id_input id)
++{
++	char *end;
++	struct nlattr *txq, *params;
++	int queue, cw_min, cw_max, aifs, txop;
++
++	if (argc != 5)
++		return 1;
++
++	if (!strcmp(argv[0], "VO"))
++		queue = NL80211_TXQ_Q_VO;
++	else if (!strcmp(argv[0], "VI"))
++		queue = NL80211_TXQ_Q_VI;
++	else if (!strcmp(argv[0], "BK"))
++		queue = NL80211_TXQ_Q_BK;
++	else if (!strcmp(argv[0], "BE"))
++		queue = NL80211_TXQ_Q_BE;
++	else {
++		printf("Invalid parameter: %s\n", argv[0]);
++		return 2;
++	}
++
++	if (!*argv[1] || !*argv[2] || !*argv[3] || !*argv[4])
++		return 1;
++
++	cw_min = strtoul(argv[1], &end, 0);
++	if (*end)
++		return 1;
++
++	cw_max = strtoul(argv[2], &end, 0);
++	if (*end)
++		return 1;
++
++	aifs = strtoul(argv[3], &end, 0);
++	if (*end)
++		return 1;
++
++	txop = strtoul(argv[4], &end, 0);
++	if (*end)
++		return 1;
++
++	txq = nla_nest_start(msg, NL80211_ATTR_WIPHY_TXQ_PARAMS);
++	if (!txq)
++		goto nla_put_failure;
++
++	params = nla_nest_start(msg, 1);
++	if (!params)
++		goto nla_put_failure;
++
++	printf("Applying setting queue:%d cwmin:%d cwmax:%d aifs:%d txop:%d\n", queue, cw_min, cw_max, aifs, txop);
++	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_QUEUE, queue);
++	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_CWMIN, cw_min);
++	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_CWMAX, cw_max);
++	NLA_PUT_U8(msg, NL80211_TXQ_ATTR_AIFS, aifs);
++	NLA_PUT_U16(msg, NL80211_TXQ_ATTR_TXOP, txop);
++
++	nla_nest_end(msg, params);
++	nla_nest_end(msg, txq);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, wmm_params, "<VO|VI|BE|BK> <cw_min> <cw_max> <aifs> <txop>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_wmm_params,
++	"Set WMM parameters for a queue (VO, VI, BE, or BK):\n"
++	" * cw_min/cw_max - contention window min/max (miliseconds)\n"
++	" * aifs - interframe spacing (ms)\n"
++	" * txop - time for tx operation limit (in units of 32 microseconds), 0 = off\n"
++	);
++
+ static int handle_retry(struct nl80211_state *state,
+ 			struct nl_cb *cb, struct nl_msg *msg,
+ 			int argc, char **argv, enum id_input id)
