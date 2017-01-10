@@ -1,0 +1,11 @@
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -35,6 +35,8 @@ void ath_tx_complete_poll_work(struct wo
+ 		return;
+ 	}
+ 
++	return;
++
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		txq = sc->tx.txq_map[i];
+ 
