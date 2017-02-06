@@ -190,6 +190,7 @@ foreach my $mirror (@ARGV) {
 #push @mirrors, 'http://mirror1.openwrt.org';
 push @mirrors, 'http://mirror2.openwrt.org/sources';
 push @mirrors, 'http://downloads.openwrt.org/sources';
+push @mirrors, 'https://github.com/tmux/tmux/releases/download/1.9a';
 
 while (!$ok) {
 	my $mirror = shift @mirrors;
