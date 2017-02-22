@@ -1,0 +1,45 @@
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -111,7 +111,7 @@ int ath_descdma_setup(struct ath_softc *
+ /* minimum h/w qdepth for non-aggregated traffic */
+ #define ATH_NON_AGGR_MIN_QDEPTH    8
+ #define ATH_TX_COMPLETE_POLL_INT   1000
+-#define ATH_TXFIFO_DEPTH           8
++#define ATH_TXFIFO_DEPTH           1
+ #define ATH_TX_ERROR               0x01
+ 
+ /* Stop tx traffic 1ms before the GO goes away */
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1917,13 +1917,13 @@ static void ath_tx_txqaddbuf(struct ath_
+ 	} else {
+ 		list_splice_tail_init(head, &txq->axq_q);
+ 
+-		if (txq->axq_link) {
++		/* if (txq->axq_link) {
+ 			ath9k_hw_set_desc_link(ah, txq->axq_link, bf->bf_daddr);
+ 			ath_dbg(common, XMIT, "link[%u] (%p)=%llx (%p)\n",
+ 				txq->axq_qnum, txq->axq_link,
+ 				ito64(bf->bf_daddr), bf->bf_desc);
+ 		} else if (!edma)
+-			puttxbuf = true;
++			puttxbuf = true; */
+ 
+ 		txq->axq_link = bf_last->bf_desc;
+ 	}
+@@ -2604,10 +2604,13 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 
+ 			if (!list_empty(&txq->axq_q)) {
+ 				struct list_head bf_q;
++				struct ath_buf *tbf;
+ 
+ 				INIT_LIST_HEAD(&bf_q);
+-				txq->axq_link = NULL;
+-				list_splice_tail_init(&txq->axq_q, &bf_q);
++				tbf = list_first_entry(&txq->axq_q, struct ath_buf, list);
++				if (tbf->bf_lastbf->bf_desc == txq->axq_link)
++					txq->axq_link = NULL;
++				list_cut_position(&bf_q, &txq->axq_q, tbf->bf_lastbf);
+ 				ath_tx_txqaddbuf(sc, txq, &bf_q, true);
+ 			}
+ 		} else {
