@@ -1,0 +1,30 @@
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -676,6 +676,7 @@ static ssize_t read_file_xmit(struct fil
+ 	PR("HW-put-tx-buf:   ", puttxbuf);
+ 	PR("HW-tx-start:     ", txstart);
+ 	PR("HW-tx-proc-desc: ", txprocdesc);
++	PR("HW-bf-push-back: ", bfpushback);
+ 	PR("TX-Failed:       ", txfailed);
+ 
+ 	if (len > size)
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -186,6 +186,7 @@ struct ath_tx_stats {
+ 	u32 puttxbuf;
+ 	u32 txstart;
+ 	u32 txprocdesc;
++	u32 bfpushback;
+ 	u32 txfailed;
+ };
+ 
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2591,6 +2591,7 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 		if (bf->bf_state.stale) {
+ 			list_del(&bf->list);
+ 			ath_tx_return_buffer(sc, bf);
++			TX_STAT_INC(txq->axq_qnum, bfpushback);
+ 			bf = list_first_entry(fifo_list, struct ath_buf, list);
+ 		}
+ 
