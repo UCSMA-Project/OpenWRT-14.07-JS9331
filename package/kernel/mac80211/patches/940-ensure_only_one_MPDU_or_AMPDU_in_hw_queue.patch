@@ -39,7 +39,7 @@
 +				tbf = list_first_entry(&txq->axq_q, struct ath_buf, list);
 +				if (tbf->bf_lastbf->bf_desc == txq->axq_link)
 +					txq->axq_link = NULL;
-+				list_cut_position(&bf_q, &txq->axq_q, tbf->bf_lastbf);
++				list_cut_position(&bf_q, &txq->axq_q, &tbf->bf_lastbf->list);
  				ath_tx_txqaddbuf(sc, txq, &bf_q, true);
  			}
  		} else {
