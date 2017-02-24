@@ -1,0 +1,49 @@
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -744,6 +744,7 @@ struct ath_hw {
+ 	struct ath_ops reg_ops;
+ 
+ 	struct timeval last_puttxbuf;
++	struct timeval last_interrupt_tx;
+ 	u32 force_quiet_bit_delay;
+ 	bool force_quiet_bit_restore;
+ 	struct device *dev;
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -56,8 +56,10 @@ void ath9k_hw_puttxbuf(struct ath_hw *ah
+ 	if (ah->force_quiet_bit_delay) {
+ 		udelay(ah->force_quiet_bit_delay);
+ 		REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+-		if (ah->force_quiet_bit_restore)
++		if (ah->force_quiet_bit_restore) {
++			do_gettimeofday(&ah->last_interrupt_tx);
+ 			REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
++		}
+ 	}
+ }
+ EXPORT_SYMBOL(ath9k_hw_puttxbuf);
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2578,9 +2578,19 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 		struct timeval now_ts;
+ 
+ 		do_gettimeofday(&now_ts);
+-		ath_dbg(common, TXDELAY, "time since put tx buf %ldus\n",
+-				(now_ts.tv_sec % 1000) * 1000000 + now_ts.tv_usec -
+-				((ah->last_puttxbuf.tv_sec % 1000) * 1000000 + ah->last_puttxbuf.tv_usec));
++		if (!ah->force_quiet_bit_restore || ah->force_quiet_bit_delay == 0)
++			ath_dbg(common, TXDELAY, "time since put tx buf %ldus\n",
++					(now_ts.tv_usec > ah->last_puttxbuf.tv_usec) ?
++						now_ts.tv_usec - ah->last_puttxbuf.tv_usec :
++						now_ts.tv_usec - ah->last_puttxbuf.tv_usec + 1000000);
++		else
++			ath_dbg(common, TXDELAY, "time since put tx buf %ldus, since last restore force_quiet_bit %ldus\n",
++					(now_ts.tv_usec > ah->last_puttxbuf.tv_usec) ?
++						now_ts.tv_usec - ah->last_puttxbuf.tv_usec :
++						now_ts.tv_usec - ah->last_puttxbuf.tv_usec + 1000000,
++					(now_ts.tv_usec > ah->last_interrupt_tx.tv_usec) ?
++						now_ts.tv_usec - ah->last_interrupt_tx.tv_usec :
++						now_ts.tv_usec - ah->last_interrupt_tx.tv_usec + 1000000);
+ 
+ 		txq = &sc->tx.txq[ts.qid];
+ 
