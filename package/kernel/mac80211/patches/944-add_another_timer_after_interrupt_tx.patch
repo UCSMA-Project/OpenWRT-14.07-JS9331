@@ -24,7 +24,7 @@
  EXPORT_SYMBOL(ath9k_hw_puttxbuf);
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2578,9 +2578,19 @@ void ath_tx_edma_tasklet(struct ath_soft
+@@ -2578,9 +2578,13 @@ void ath_tx_edma_tasklet(struct ath_soft
  		struct timeval now_ts;
  
  		do_gettimeofday(&now_ts);
@@ -33,17 +33,11 @@
 -				((ah->last_puttxbuf.tv_sec % 1000) * 1000000 + ah->last_puttxbuf.tv_usec));
 +		if (!ah->force_quiet_bit_restore || ah->force_quiet_bit_delay == 0)
 +			ath_dbg(common, TXDELAY, "time since put tx buf %ldus\n",
-+					(now_ts.tv_usec > ah->last_puttxbuf.tv_usec) ?
-+						now_ts.tv_usec - ah->last_puttxbuf.tv_usec :
-+						now_ts.tv_usec - ah->last_puttxbuf.tv_usec + 1000000);
++					now_ts.tv_usec - ah->last_puttxbuf.tv_usec + (now_ts.tv_sec - ah->last_puttxbuf.tv_sec) * 1000000);
 +		else
 +			ath_dbg(common, TXDELAY, "time since put tx buf %ldus, since last restore force_quiet_bit %ldus\n",
-+					(now_ts.tv_usec > ah->last_puttxbuf.tv_usec) ?
-+						now_ts.tv_usec - ah->last_puttxbuf.tv_usec :
-+						now_ts.tv_usec - ah->last_puttxbuf.tv_usec + 1000000,
-+					(now_ts.tv_usec > ah->last_interrupt_tx.tv_usec) ?
-+						now_ts.tv_usec - ah->last_interrupt_tx.tv_usec :
-+						now_ts.tv_usec - ah->last_interrupt_tx.tv_usec + 1000000);
++					now_ts.tv_usec - ah->last_puttxbuf.tv_usec + (now_ts.tv_sec - ah->last_puttxbuf.tv_sec) * 1000000,
++					now_ts.tv_usec - ah->last_interrupt_tx.tv_usec + (now_ts.tv_sec - ah->last_interrupt_tx.tv_sec) * 1000000);
  
  		txq = &sc->tx.txq[ts.qid];
  
