@@ -1,0 +1,59 @@
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -743,8 +743,8 @@ enum ath_cal_list {
+ struct ath_hw {
+ 	struct ath_ops reg_ops;
+ 
+-	struct timeval last_puttxbuf;
+-	struct timeval last_interrupt_tx;
++	struct timespec last_puttxbuf;
++	struct timespec last_interrupt_tx;
+ 	u32 force_quiet_bit_delay;
+ 	u32 force_quiet_bit_restore_in;
+ 	bool force_quiet_bit_restore;
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -51,14 +51,14 @@ EXPORT_SYMBOL(ath9k_hw_gettxbuf);
+ 
+ void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
+ {
+-	do_gettimeofday(&ah->last_puttxbuf);
++	getnstimeofday(&ah->last_puttxbuf);
+ 	REG_WRITE(ah, AR_QTXDP(q), txdp);
+ 	if (ah->force_quiet_bit_delay) {
+ 		udelay(ah->force_quiet_bit_delay);
+ 		REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+ 		if (ah->force_quiet_bit_restore) {
+ 			udelay(ah->force_quiet_bit_restore_in);
+-			do_gettimeofday(&ah->last_interrupt_tx);
++			getnstimeofday(&ah->last_interrupt_tx);
+ 			REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+ 		}
+ 	}
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2575,16 +2575,18 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 			continue;
+ 		}
+ 
+-		struct timeval now_ts;
++		struct timespec now_ts, diff, diff2;
+ 
+-		do_gettimeofday(&now_ts);
++		getnstimeofday(&now_ts);
++		diff = timespec_sub(now_ts, ah->last_puttxbuf);
++		diff2 = timespec_sub(now_ts, ah->last_interrupt_tx);
+ 		if (!ah->force_quiet_bit_restore || ah->force_quiet_bit_delay == 0)
+ 			ath_dbg(common, TXDELAY, "time since put tx buf %ldus\n",
+-					now_ts.tv_usec - ah->last_puttxbuf.tv_usec + (now_ts.tv_sec - ah->last_puttxbuf.tv_sec) * 1000000);
++					diff.tv_sec * 1000000 + diff.tv_nsec / 1000);
+ 		else
+-			ath_dbg(common, TXDELAY, "time since put tx buf %ldus, since last restore force_quiet_bit %ldus\n",
+-					now_ts.tv_usec - ah->last_puttxbuf.tv_usec + (now_ts.tv_sec - ah->last_puttxbuf.tv_sec) * 1000000,
+-					now_ts.tv_usec - ah->last_interrupt_tx.tv_usec + (now_ts.tv_sec - ah->last_interrupt_tx.tv_sec) * 1000000);
++			ath_dbg(common, TXDELAY, "time since put tx buf and force_quiet_bit %ldus, %ldus\n",
++					diff.tv_sec * 1000000 + diff.tv_nsec / 1000,
++					diff2.tv_sec * 1000000 + diff2.tv_nsec / 1000);
+ 
+ 		txq = &sc->tx.txq[ts.qid];
+ 
