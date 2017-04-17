@@ -1,0 +1,19 @@
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -232,14 +232,14 @@ bool ath9k_hw_set_txq_props(struct ath_h
+ 		qi->tqi_aifs = INIT_AIFS;
+ 	if (qinfo->tqi_cwmin != ATH9K_TXQ_USEDEFAULT) {
+ 		cw = min(qinfo->tqi_cwmin, 1024U);
+-		qi->tqi_cwmin = 1;
++		qi->tqi_cwmin = 0;
+ 		while (qi->tqi_cwmin < cw)
+ 			qi->tqi_cwmin = (qi->tqi_cwmin << 1) | 1;
+ 	} else
+ 		qi->tqi_cwmin = qinfo->tqi_cwmin;
+ 	if (qinfo->tqi_cwmax != ATH9K_TXQ_USEDEFAULT) {
+ 		cw = min(qinfo->tqi_cwmax, 1024U);
+-		qi->tqi_cwmax = 1;
++		qi->tqi_cwmax = 0;
+ 		while (qi->tqi_cwmax < cw)
+ 			qi->tqi_cwmax = (qi->tqi_cwmax << 1) | 1;
+ 	} else
