@@ -1,0 +1,29 @@
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -972,7 +972,7 @@ static ssize_t read_force_quiet_bit_rest
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+-static ssize_t write_force_quiet_bit_restore(struct file *file, char __user *user_buf,
++static ssize_t write_force_quiet_bit_restore(struct file *file, const char __user *user_buf,
+ 											size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+@@ -1015,7 +1015,7 @@ static ssize_t read_max_timing_count(str
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+-static ssize_t write_max_timing_count(struct file *file, char __user *user_buf,
++static ssize_t write_max_timing_count(struct file *file, const char __user *user_buf,
+ 											size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+@@ -1060,7 +1060,7 @@ static ssize_t read_eifs_equal_to_aifs(s
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+-static ssize_t write_eifs_equal_to_aifs(struct file *file, char __user *user_buf,
++static ssize_t write_eifs_equal_to_aifs(struct file *file, const char __user *user_buf,
+ 											size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
