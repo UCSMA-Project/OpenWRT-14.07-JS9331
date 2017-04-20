@@ -1,0 +1,56 @@
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -758,6 +758,8 @@ struct ath_hw {
+ 	u32 force_quiet_bit_restore_in;
+ 	bool force_quiet_bit_restore;
+ 	bool eifs_equal_to_aifs;
++	bool unlocking_logging;
++	bool unlocked;
+ 	struct device *dev;
+ 	struct ieee80211_hw *hw;
+ 	struct ath_common common;
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -505,6 +505,8 @@ static int ath9k_init_softc(u16 devid, s
+ 	ath9k_ah->current_timing_count = 0;
+ 	ath9k_ah->max_timing_count = 0;
+ 	ath9k_ah->eifs_equal_to_aifs = true;
++	ath9k_ah->unlocking_logging = false;
++	ath9k_ah->unlocked = false;
+ 	ath9k_ah->dev = sc->dev;
+ 	ath9k_ah->hw = sc->hw;
+ 	ath9k_ah->hw_version.devid = devid;
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2580,18 +2580,20 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 		}
+ 
+ 		if (ah->current_timing_count < ah->max_timing_count) {
+-
+-			/* get the diff since last put tx buf and restore quiet collision */
+-			ah->since_last_txok[ah->current_timing_count] =
+-				timespec_sub(now_ts, ah->last_txok_irq);
+-			ah->puttxbuf_delay[ah->current_timing_count] =
+-				timespec_sub(now_ts, ah->last_puttxbuf);
+-			if (ah->force_quiet_bit_restore)
+-				ah->force_quiet_restore_delay[ah->current_timing_count] =
+-					timespec_sub(now_ts, ah->last_force_quiet_restore);
+-			ah->current_timing_count++;
+-			ah->last_txok_irq = now_ts;
++			if ((ah->unlocking_logging && ah->unlocked) || !ah->unlocking_logging) {
++				/* get the diff since last put tx buf and restore quiet collision */
++				ah->since_last_txok[ah->current_timing_count] =
++					timespec_sub(now_ts, ah->last_txok_irq);
++				ah->puttxbuf_delay[ah->current_timing_count] =
++					timespec_sub(now_ts, ah->last_puttxbuf);
++				if (ah->force_quiet_bit_restore)
++					ah->force_quiet_restore_delay[ah->current_timing_count] =
++						timespec_sub(now_ts, ah->last_force_quiet_restore);
++				ah->current_timing_count++;
++				ah->unlocked = false;
++			}
+ 		}
++		ah->last_txok_irq = now_ts;
+ 		/* if reach max_timing_count then output kernel log */
+ 		if (ah->current_timing_count >= ah->max_timing_count && ah->current_timing_count) {
+ 			int i;
