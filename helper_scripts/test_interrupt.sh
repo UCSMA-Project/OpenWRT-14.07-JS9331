@@ -10,9 +10,6 @@
 #           set delay to any value greater than 0 will force count=1, the
 #           desired behavior is to observe a packet stuck in the TX queue if
 #           the interrupt of transmission is successful
-# note: if delay > 0, then after the test, TX queue will be blocked since the
-#       force_quiet_bit is set and the adapter thinks it is in quiet collision
-#       period. You need to manually resume the TX queue.
 
 delay=$1
 packet_num=$2
