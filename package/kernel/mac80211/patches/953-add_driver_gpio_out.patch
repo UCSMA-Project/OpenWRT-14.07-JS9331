@@ -1,0 +1,89 @@
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/leds.h>
+ #include <linux/completion.h>
++#include <linux/gpio.h>
+ 
+ #include "common.h"
+ #include "debug.h"
+@@ -96,6 +97,8 @@ int ath_descdma_setup(struct ath_softc *
+ #define ATH_TXMAXTRY            13
+ #define ATH_MAX_SW_RETRIES      30
+ 
++#define ATH9K_GPIO_OUT			20
++
+ #define TID_TO_WME_AC(_tid)				\
+ 	((((_tid) == 0) || ((_tid) == 3)) ? IEEE80211_AC_BE :	\
+ 	 (((_tid) == 1) || ((_tid) == 2)) ? IEEE80211_AC_BK :	\
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -586,6 +586,12 @@ static int ath9k_init_softc(u16 devid, s
+ 	ath_read_cachesize(common, &csz);
+ 	common->cachelsz = csz << 2; /* convert to bytes */
+ 
++	/* request GPIO */
++	ret = gpio_request_one(ATH9K_GPIO_OUT, GPIOF_OUT_INIT_LOW,
++							 "TX Status Out");
++	if (ret)
++		goto err_gpio;
++
+ 	/* Initializes the hardware for all supported chipsets */
+ 	ret = ath9k_hw_init(ath9k_ah);
+ 	if (ret)
+@@ -627,6 +633,8 @@ err_queues:
+ err_hw:
+ 	ath9k_eeprom_release(sc);
+ 	dev_kfree_skb_any(sc->tx99_skb);
++	gpio_free(ATH9K_GPIO_OUT);
++err_gpio:
+ 	return ret;
+ }
+ 
+@@ -907,6 +915,7 @@ static void ath9k_deinit_softc(struct at
+ 		sc->dfs_detector->exit(sc->dfs_detector);
+ 
+ 	ath9k_eeprom_release(sc);
++	gpio_free(ATH9K_GPIO_OUT);
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include "ath9k.h"
+ #include "hw.h"
+ #include "hw-ops.h"
+ #include <linux/export.h>
+@@ -52,14 +53,17 @@ EXPORT_SYMBOL(ath9k_hw_gettxbuf);
+ void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
+ {
+ 	getnstimeofday(&ah->last_puttxbuf);
++	gpio_set_value(ATH9K_GPIO_OUT, 1);
+ 	REG_WRITE(ah, AR_QTXDP(q), txdp);
+ 	if (q != ATH9K_NUM_TX_QUEUES - 1	//exlcude beacon queue
+ 			&& ah->force_quiet_bit_delay) {
+ 		udelay(ah->force_quiet_bit_delay);
++		gpio_set_value(ATH9K_GPIO_OUT, 0);
+ 		REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+ 		if (ah->force_quiet_bit_restore) {
+ 			udelay(ah->force_quiet_bit_restore_in);
+ 			getnstimeofday(&ah->last_force_quiet_restore);
++			gpio_set_value(ATH9K_GPIO_OUT, 1);
+ 			REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+ 		}
+ 	}
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2567,6 +2567,7 @@ void ath_tx_edma_tasklet(struct ath_soft
+ 			break;
+ 		}
+ 
++		gpio_set_value(ATH9K_GPIO_OUT, 0);
+ 		getnstimeofday(&now_ts);	// get current time
+ 
+ 		/* Process beacon completions separately */
