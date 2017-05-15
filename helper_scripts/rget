@@ -1,0 +1,13 @@
+#!/bin/ash
+# a helper script to get reg value
+# put this file in /usr/bin
+
+regidx=$1
+
+if [ -z $regidx ]; then
+	echo "usage: $0 <reg index>"
+	exit
+fi
+
+echo $regidx > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
+cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
