@@ -1,0 +1,26 @@
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -628,8 +628,9 @@ static inline int drv_conf_tx(struct iee
+ 
+ 	might_sleep();
+ 
+-	if (!check_sdata_in_driver(sdata))
+-		return -EIO;
++	if (sdata->dev && sdata->dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MONITOR)
++		if (!check_sdata_in_driver(sdata))
++			return -EIO;
+ 
+ 	trace_drv_conf_tx(local, sdata, ac, params);
+ 	if (local->ops->conf_tx)
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1851,7 +1851,8 @@ static int ieee80211_set_txq_params(stru
+ 		return -EINVAL;
+ 	}
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MONITOR)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
+ 
+ 	return 0;
+ }
