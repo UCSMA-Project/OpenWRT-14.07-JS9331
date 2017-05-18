@@ -1,0 +1,11 @@
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2347,6 +2347,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw
+ 			regulatory->current_rd);
+ 	}
+ 
++	regulatory->current_rd=0x8188;	/* 0x188 is the reg code for JP */
++
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_OP_MODE);
+ 
+ 	if (eeval & AR5416_OPFLAGS_11A) {
