@@ -1,0 +1,24 @@
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -51,6 +51,10 @@ bool __ieee80211_recalc_txpower(struct i
+ 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 	if (!chanctx_conf) {
+ 		rcu_read_unlock();
++		if (sdata->dev->ieee80211_ptr->iftype == NL80211_IFTYPE_MONITOR) {
++			sdata->vif.bss_conf.txpower = sdata->user_power_level;
++			ieee80211_hw_config(sdata->local, 0);
++		}
+ 		return false;
+ 	}
+ 
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -146,7 +146,7 @@ static u32 ieee80211_hw_conf_chan(struct
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (!rcu_access_pointer(sdata->vif.chanctx_conf))
++		if (!rcu_access_pointer(sdata->vif.chanctx_conf) && sdata->vif.type != NL80211_IFTYPE_MONITOR)
+ 			continue;
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			continue;
