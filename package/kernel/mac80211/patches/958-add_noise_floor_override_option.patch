@@ -1,0 +1,108 @@
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -253,7 +253,9 @@ int ath9k_hw_loadnf(struct ath_hw *ah, s
+ 			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
+ 				continue;
+ 
+-			if (h)
++			if (ah->nf_override)
++				nfval = ah->nf_override;
++			else if (h)
+ 				nfval = h[i].privNF;
+ 			else
+ 				nfval = default_nf;
+@@ -325,6 +327,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, s
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath9k_hw_loadnf);
+ 
+ 
+ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1303,6 +1303,65 @@ static const struct file_operations fops
+ };
+ #endif
+ 
++static ssize_t read_file_nf_override(struct file *file,
++				     char __user *user_buf,
++				     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	char buf[32];
++	unsigned int len;
++
++	if (ah->nf_override == 0)
++		len = sprintf(buf, "off\n");
++	else
++		len = sprintf(buf, "%d\n", ah->nf_override);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_nf_override(struct file *file,
++				      const char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	long val;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++	if (strncmp("off", buf, 3) == 0)
++		val = 0;
++	else if (kstrtol(buf, 0, &val))
++		return -EINVAL;
++
++	if (val > 0)
++		return -EINVAL;
++
++	if (val < -120)
++		return -EINVAL;
++
++	ah->nf_override = val;
++
++	if (ah->curchan)
++		ath9k_hw_loadnf(ah, ah->curchan);
++
++	return count;
++}
++
++static const struct file_operations fops_nf_override = {
++	.read = read_file_nf_override,
++	.write = write_file_nf_override,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ /* Ethtool support for get-stats */
+ 
+ #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
+@@ -1711,6 +1770,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_regdump);
+ 	debugfs_create_file("dump_nfcal", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_dump_nfcal);
++	debugfs_create_file("nf_override", S_IRUSR | S_IWUSR,
++				sc->debug.debugfs_phy, sc, &fops_nf_override);
+ 
+ 	ath9k_cmn_debug_base_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
+ 	ath9k_cmn_debug_modal_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -792,6 +792,7 @@ struct ath_hw {
+ 	u32 rfkill_gpio;
+ 	u32 rfkill_polarity;
+ 	u32 ah_flags;
++	s16 nf_override;
+ 
+ 	unsigned long diag;
+ 
