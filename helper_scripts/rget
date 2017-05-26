@@ -13,11 +13,20 @@ echo $regidx > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
 regval=$(cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval)
 echo $regval
 
-if [ $regidx = "0x9e1c" ]; then
+if [ $regidx = "0x9e1c" ]; then	#AR_PHY_CCA_0, baseboard CCA control
 	CCA_THRESHOLD_raw=$((($regval & 0x7f000) >> 12))
 	CCA_THRESHOLD=$(($CCA_THRESHOLD_raw | ~0x7f))
 	MINCCA_PWR_raw=$((($regval & 0x1ff00000) >> 20))
 	MINCCA_PWR=$(($MINCCA_PWR_raw | ~0x1ff))
 	echo "CCA_THRESHOLD: $CCA_THRESHOLD"
 	echo "MINCCA_PWR: $MINCCA_PWR"
+fi
+
+if [ $regidx = "0xa208" ]; then	#AR_PHY_MODE, mode control CCK/OFDM
+	printf "%-27s%7s: $(($regval & 0x1))\n" "AR_PHY_MODE_CCK" "(0x1)"
+	printf "%-27s%7s: $((($regval & 0x4) >> 2))\n" "AR_PHY_MODE_DYNAMIC" "(0x4)"
+	printf "%-27s%7s: $((($regval & 0x20) >> 5))\n" "AR_PHY_MODE_HALF" "(0x20)"
+	printf "%-27s%7s: $((($regval & 0x40) >> 6))\n" "AR_PHY_MODE_QUARTER" "(0x40)"
+	printf "%-27s%7s: $((($regval & 0x100) >> 8))\n" "AR_PHY_MODE_DYN_CCK_DISABLE" "(0x100)"
+	printf "%-27s%7s: $((($regval & 0x200) >> 9))\n" "AR_PHY_MODE_SVD_HALF" "(0x200)"
 fi
