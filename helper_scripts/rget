@@ -10,4 +10,14 @@ if [ -z $regidx ]; then
 fi
 
 echo $regidx > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
-cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+regval=$(cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval)
+echo $regval
+
+if [ $regidx = "0x9e1c" ]; then
+	CCA_THRESHOLD_raw=$((($regval & 0x7f000) >> 12))
+	CCA_THRESHOLD=$(($CCA_THRESHOLD_raw | ~0x7f))
+	MINCCA_PWR_raw=$((($regval & 0x1ff00000) >> 20))
+	MINCCA_PWR=$(($MINCCA_PWR_raw | ~0x1ff))
+	echo "CCA_THRESHOLD: $CCA_THRESHOLD"
+	echo "MINCCA_PWR: $MINCCA_PWR"
+fi

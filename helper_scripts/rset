@@ -11,5 +11,30 @@ if [ -z $regidx ] || [ -z $regval ]; then
 fi
 
 echo $regidx > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
-echo $regval > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
-cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+case $regidx in
+	"0x9e1c")
+		field=$2
+		val=$3
+		if [ -z $val ]; then
+			echo "usage: $0 0x9e1c <maxCCA/minCCA> <val>"
+			exit
+		fi
+		ori_val=$(cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval)
+		case $field in
+			"maxCCA")
+				new_val=$((($ori_val & ~0x7f000) | (($val & 0x7f) << 12)))
+				echo $new_val > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+				;;
+			"minCCA")
+				new_val=$((($ori_val & ~0x1ff00000) | (($val & 0x1ff) << 20)))
+				echo $new_val > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+				;;
+			*)
+				echo "usage: $0 0x9e1c <maxCCA/minCCA> <val>"
+				exit
+		esac
+		;;
+	*)
+		echo $regval > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+esac
+rget $regidx
