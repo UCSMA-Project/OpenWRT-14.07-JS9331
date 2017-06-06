@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/sh
 # a helper script to set reg value
 # put this file in /usr/bin
 
