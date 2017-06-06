@@ -4,6 +4,8 @@
 
 regidx=$1
 regval=$2
+field=$2
+val=$3
 
 if [ -z $regidx ] || [ -z $regval ]; then
 	echo "usage: $0 <reg index> <value>"
@@ -12,9 +14,7 @@ fi
 
 echo $regidx > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
 case $regidx in
-	"0x9e1c")
-		field=$2
-		val=$3
+	"0x9e1c")	#AR_PHY_CCA_0, baseboard CCA control
 		if [ -z $val ]; then
 			echo "usage: $0 0x9e1c <maxCCA/minCCA> <val>"
 			exit
@@ -31,6 +31,26 @@ case $regidx in
 				;;
 			*)
 				echo "usage: $0 0x9e1c <maxCCA/minCCA> <val>"
+				exit
+		esac
+		;;
+	"0x801c")	#AR_USEC, baseband RX/TX latency control
+		if [ -z $val ]; then
+			echo "usage: $0 0x801c <tx_lat/rx_lat> <val>"
+			exit
+		fi
+		ori_val=$(cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval)
+		case $field in
+			"tx_lat")
+				new_val=$((($ori_val & ~0x7fc000) | (($val & 0x1ff) << 14)))
+				echo $new_val > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+				;;
+			"rx_lat")
+				new_val=$((($ori_val & ~0x1f800000) | (($val & 0x3f) << 23)))
+				echo $new_val > /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+				;;
+			*)
+				echo "usage: $0 0x801c <tx_lat/rx_lat> <val>"
 				exit
 		esac
 		;;

@@ -30,3 +30,10 @@ if [ $regidx = "0xa208" ]; then	#AR_PHY_MODE, mode control CCK/OFDM
 	printf "%-27s%7s: $((($regval & 0x100) >> 8))\n" "AR_PHY_MODE_DYN_CCK_DISABLE" "(0x100)"
 	printf "%-27s%7s: $((($regval & 0x200) >> 9))\n" "AR_PHY_MODE_SVD_HALF" "(0x200)"
 fi
+
+if [ $regidx = "0x801c" ]; then #AR_USEC, baseband RX/TX latency control
+	tx_lat=$((($regval & 0x7fc000) >> 14))
+	rx_lat=$((($regval & 0x1f800000) >> 23))
+	printf "RX delay: %4sus  Baseband Rx latency to start of SIGNAL\n" "$rx_lat"
+	printf "TX delay: %4sus  Baseband Tx latency to start of timestamp in beacon frame\n" "$tx_lat"
+fi
