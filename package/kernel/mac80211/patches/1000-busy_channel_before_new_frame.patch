@@ -1,0 +1,12 @@
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -52,6 +52,9 @@ EXPORT_SYMBOL(ath9k_hw_gettxbuf);
+ 
+ void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
+ {
++	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
++	udelay(ah->force_quiet_bit_restore_in);
++	REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL);
+ 	getnstimeofday(&ah->last_puttxbuf);
+ 	gpio_set_value(ATH9K_GPIO_OUT, 1);
+ 	REG_WRITE(ah, AR_QTXDP(q), txdp);
