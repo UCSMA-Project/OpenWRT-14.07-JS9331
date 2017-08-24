@@ -75,8 +75,8 @@
 +COMMAND(set, wmm_params, "<VO|VI|BE|BK> <cw_min> <cw_max> <aifs> <txop>",
 +	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_wmm_params,
 +	"Set WMM parameters for a queue (VO, VI, BE, or BK):\n"
-+	" * cw_min/cw_max - contention window min/max (miliseconds)\n"
-+	" * aifs - interframe spacing (ms)\n"
++	" * cw_min/cw_max - contention window min/max (slots)\n"
++	" * aifs - interframe spacing (us)\n"
 +	" * txop - time for tx operation limit (in units of 32 microseconds), 0 = off\n"
 +	);
 +
