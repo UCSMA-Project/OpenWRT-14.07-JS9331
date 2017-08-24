@@ -1,0 +1,53 @@
+#!/bin/sh
+# This script is used to initialize the wireless adapter (e.g. set slottime/
+# SIFS/EIFS) and should be put in folder /etc/hotplug.d/net/
+# In our test environment, the wireless adapters are in monitor mode so that we
+# can easily inject packets to simulation the situation where multiple adapters
+# compete for the same channel. However, due to the constraints in the mac80211
+# abstract layer, the kernel doesn't support tunning TX parameters (e.g. CWmin/
+# CWmax/slottime/SIFS/EIFS/short preamble/long preamble) when the master
+# interface is in monitor mode (previously we setup the master interface in
+# mesh mode and use a slave interface operates in monitor mode to test, but
+# this introduces some undesired packets like beacon packets from the master
+# interface).
+# In order to operate master interface in monitor mode and be able to tune TX
+# parameters at the same time, we need to write registers on the adapter
+# directly. And this script help us setup necessary parameters by directly
+# writting to the adapter's registers.
+
+clockrate=44			#44MHz clock rate
+slottime=880			#20us * 44 = 880
+slottime_reg=0x1070
+SIFS=352				#(10 - 2)us * 44 = 352
+SIFS_reg=0x1030
+EIFS=15928				#362us * 44 = 15928
+EIFS=2992				#20us * 3 + 8us = 68us
+EIFS_reg=0x10b0			#EIFS = TX time for ACK + SIFS + DIFS
+						#     = 192(long preamble) + 112(14 bytes ACK at 1Mbps)
+						#       + (10 - 2) + 50 = 362us
+regidx=/sys/kernel/debug/ieee80211/phy0/ath9k/regidx
+regval=/sys/kernel/debug/ieee80211/phy0/ath9k/regval
+
+setup_mon0()
+{
+	echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k/eifs_equal_to_aifs
+	#enable promiscous mode on mon0
+	ip link set mon0 promisc on
+	#set channel to 14
+	iw mon0 set channel 14
+	#set wmm parameters for BE queue
+	iw mon0 set wmm_params BE 15 15 3 0
+	#setup slottime
+	echo $slottime_reg > $regidx
+	#echo $slottime > $regval
+	#setup SIFS
+	echo $SIFS_reg > $regidx
+	#echo $SIFS > $regval
+	#setup EIFS
+	echo $EIFS_reg > $regidx
+	echo $EIFS > $regval
+}
+
+if [ "$ACTION" = add ] && [ "$INTERFACE" = mon0 ]; then
+	setup_mon0
+fi
